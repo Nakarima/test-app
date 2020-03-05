@@ -7,6 +7,8 @@ app = Flask(__name__)
 def evaluate():
     if request.is_json:
         content = request.get_json()
-        result = calc(content['expression'])
-        return jsonify(result)
+        try:
+            return calc(content['expression'])
+        except Exception as e:
+            return jsonify(str(e)), 400
 
