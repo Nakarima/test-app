@@ -8,7 +8,8 @@ def evaluate():
     if request.is_json:
         content = request.get_json()
         try:
-            return calc(content['expression'])
+            result = calc(content['expression'])
+            return jsonify(result=result)
         except Exception as e:
-            return jsonify(str(e)), 400
+            return jsonify(validation_error=str(e)), 420
 
