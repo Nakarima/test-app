@@ -2,12 +2,7 @@ import multiprocessing as mp
 
 def calc(expression):
     try:
-        #postfix_expr = postfix_transform(expression)
-        #print(expr_evaluation(postfix_expr))
-        #return str(postfix_evaluation(postfix_expr))
-
         res = expr_evaluation(postfix_transform(expression))
-        print(res)
         return res
     except Exception as e:
         raise Exception(str(e))
@@ -42,8 +37,6 @@ def expr_evaluation(expression):
     if len(expression) < 7:
         return postfix_evaluation(expression)
 
-    expr_list = []
-    expr_start = 0
     last_operator = expression.pop()
     operands_count = 0
     operators_count = 1
@@ -56,13 +49,11 @@ def expr_evaluation(expression):
             operands_count += 1
         index -= 1
 
-    expr1 = 0
-    expr2 = 0
     tmp1 = expression[index + 1:]
     tmp2 = expression[:index + 1]
 
     pool = mp.Pool(2)
-    #find way for processes to make processes
+    #find way for recurrent processes
     expr1 = pool.apply_async(postfix_evaluation, [tmp1])
     expr2 = pool.apply_async(postfix_evaluation, [tmp2])
 
