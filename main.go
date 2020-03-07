@@ -10,6 +10,41 @@ import (
 	"unicode"
 )
 
+func expressionEvaluation(expression []string, c chan string) {
+	if len(expression) < 7 {
+		c <- postfixEvaluation(expression)
+		return
+	}
+
+	lastOperator := expression[len(expression)-1]
+	expression = expression[:len(expression)-1]
+	operandsCount := 0
+	operatorsCount := 1
+	index := len(expression) - 1
+
+	for operatorsCount != operandsCount {
+		if strings.ContainsAny(expression[index], "+-/*") {
+			operatorsCount++
+		} else {
+			operandsCount++
+		}
+		index--
+	}
+
+	expr1 := expression[index+1:]
+	expr2 := expression[:index+1]
+	chan1 := make(chan string)
+	chan2 := make(chan string)
+
+	go expressionEvaluation(expr1, chan1)
+	go expressionEvaluation(expr2, chan2)
+
+	res1 := <-chan1
+	res2 := <-chan2
+	c <- postfixEvaluation([]string{res1, res2, lastOperator})
+	return
+}
+
 func postfixEvaluation(expression []string) string {
 	if len(expression) == 1 {
 		return expression[0]
@@ -109,6 +144,10 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(postfixEvaluation(text))
+		c := make(chan string)
+		go expressionEvaluation(text, c)
+
+		res := <-c
+		fmt.Println(res)
 	}
 }
