@@ -1,14 +1,33 @@
 package main
 
 import (
-	"bufio"
+	"encoding/json"
 	"errors"
-	"fmt"
-	"os"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 	"strconv"
 	"strings"
 	"unicode"
 )
+
+type exprStruct struct {
+	Expression string
+}
+
+func calc(expression string) (string, error) {
+	expr, err := postfixTransform(expression)
+
+	if err != nil {
+		return "", err
+	}
+	c := make(chan string)
+	go expressionEvaluation(expr, c)
+
+	res := <-c
+	return res, nil
+
+}
 
 func expressionEvaluation(expression []string, c chan string) {
 	if len(expression) < 7 {
@@ -89,7 +108,7 @@ func postfixTransform(expression string) ([]string, error) {
 	//dirty, strings conv everywhere xD
 	for i, s := range expression {
 		if unicode.IsDigit(s) {
-			if unicode.IsDigit(rune(expression[i-1])) {
+			if i > 0 && unicode.IsDigit(rune(expression[i-1])) {
 				postfix[len(postfix)-1] = postfix[len(postfix)-1] + string(s)
 			} else {
 				postfix = append(postfix, string(s))
@@ -134,20 +153,27 @@ func postfixTransform(expression string) ([]string, error) {
 	return postfix, nil
 }
 
-func main() {
-
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.ReplaceAll(input, "\n", "")
-	text, err := postfixTransform(input)
-
+func evaluate(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var expr exprStruct
+	_ = decoder.Decode(&expr)
+	result, err := calc(expr.Expression)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		c := make(chan string)
-		go expressionEvaluation(text, c)
+		json.NewEncoder(w).Encode(err)
+		return
 
-		res := <-c
-		fmt.Println(res)
 	}
+
+	json.NewEncoder(w).Encode(result)
+	return
+}
+
+func handleRequests() {
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/evaluate", evaluate).Methods("POST")
+	log.Fatal(http.ListenAndServe(":5000", router))
+}
+
+func main() {
+	handleRequests()
 }
