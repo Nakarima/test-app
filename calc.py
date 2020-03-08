@@ -67,7 +67,7 @@ def expr_evaluation(expression):
 def postfix_transform(expression):
     postfix = []
     stack = []
-    funcs = '+-/*'
+    operators = '+-/*'
     prec = {'*': 3, '/':3, '+':2, '-':2, '(':1}
     expression.replace(' ', '')
 
@@ -78,7 +78,7 @@ def postfix_transform(expression):
             else:
                 postfix.append(expression[i])
 
-        elif expression[i] in funcs:
+        elif expression[i] in operators:
             while len(stack) > 0 and prec[expression[i]] <= prec[stack[-1]]:
                 postfix.append(stack.pop())
             stack.append(expression[i])
@@ -94,12 +94,17 @@ def postfix_transform(expression):
                     o = stack.pop()
             except:
                 raise Exception('Unclosed parenthisis')
-            if len(stack) > 0 and stack[-1] in funcs:
+            if len(stack) > 0 and stack[-1] in operators:
                 postfix.append(stack.pop())
         else:
             raise Exception('Character not allowed')
 
     while len(stack) > 0:
-        postfix.append(stack.pop())
-
+        o = stack.pop()
+        if o == "(":
+            raise Exception('Unclosed parenthisis')
+        postfix.append(o)
+    
+    if len(postfix) % 2 == 0:
+        raise Exception('Too many operators')
     return postfix
