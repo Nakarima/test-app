@@ -26,7 +26,6 @@ func calc(expression string) (string, error) {
 
 	res := <-c
 	return res, nil
-
 }
 
 func expressionEvaluation(expression []string, c chan string) {
@@ -130,7 +129,6 @@ func postfixTransform(expression string) ([]string, error) {
 					o = stack[len(stack)-1]
 					stack = stack[:len(stack)-1]
 				} else {
-
 					return nil, errors.New("unclosed parenthisis")
 				}
 			}
@@ -142,12 +140,19 @@ func postfixTransform(expression string) ([]string, error) {
 		} else {
 			return nil, errors.New("char not allowed")
 		}
-
 	}
 
 	for len(stack) > 0 {
+		o := stack[len(stack)-1]
+		if o == "(" {
+			return nil, errors.New("unclosed parenthisis")
+		}
 		postfix = append(postfix, stack[len(stack)-1])
 		stack = stack[:len(stack)-1]
+	}
+
+	if len(postfix)%2 == 0 {
+		return nil, errors.New("too many operators")
 	}
 
 	return postfix, nil
@@ -156,12 +161,18 @@ func postfixTransform(expression string) ([]string, error) {
 func evaluate(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var expr exprStruct
-	_ = decoder.Decode(&expr)
+	err := decoder.Decode(&expr)
+	if err != nil {
+		w.WriteHeader(420)
+		json.NewEncoder(w).Encode(err.Error())
+		return
+	}
+
 	result, err := calc(expr.Expression)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		w.WriteHeader(420)
+		json.NewEncoder(w).Encode(err.Error())
 		return
-
 	}
 
 	json.NewEncoder(w).Encode(result)
