@@ -50,8 +50,8 @@ func expressionEvaluation(expression []string, c chan string) {
 		index--
 	}
 
-	expr1 := expression[index+1:]
-	expr2 := expression[:index+1]
+	expr1 := expression[:index+1]
+	expr2 := expression[index+1:]
 	chan1 := make(chan string)
 	chan2 := make(chan string)
 
@@ -120,8 +120,14 @@ func postfixTransform(expression string) ([]string, error) {
 			}
 			stack = append(stack, string(s))
 		} else if strings.ContainsAny(string(s), "(") {
+			if strings.ContainsAny(string(expression[i+1]), operators) {
+				return nil, errors.New("invalid operator placement")
+			}
 			stack = append(stack, string(s))
 		} else if strings.ContainsAny(string(s), ")") {
+			if strings.ContainsAny(string(expression[i-1]), operators) {
+				return nil, errors.New("invalid operator placement")
+			}
 			o := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
 			for !strings.ContainsAny(string(o), "(") {
@@ -150,6 +156,9 @@ func postfixTransform(expression string) ([]string, error) {
 		stack = stack[:len(stack)-1]
 	}
 
+	if len(postfix)%2 == 0 {
+		return nil, errors.New("invalid number of operators")
+	}
 	return postfix, nil
 }
 
@@ -159,7 +168,7 @@ func evaluate(w http.ResponseWriter, r *http.Request) {
 	_ = decoder.Decode(&expr)
 	result, err := calc(expr.Expression)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		json.NewEncoder(w).Encode(err.Error())
 		return
 
 	}

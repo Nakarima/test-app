@@ -11,7 +11,6 @@ def postfix_evaluation(expression):
     if len(expression) == 1:
         return expression[0]
 
-    #dirty but need that for now
     def is_digit(x):
         try:
             float(x)
@@ -49,9 +48,8 @@ def expr_evaluation(expression):
             operands_count += 1
         index -= 1
 
-    tmp1 = expression[index + 1:]
-    tmp2 = expression[:index + 1]
-
+    tmp1 = expression[:index + 1]
+    tmp2 = expression[index + 1:]
     pool = mp.Pool(2)
     #find way for recurrent processes
     expr1 = pool.apply_async(postfix_evaluation, [tmp1])
@@ -84,9 +82,13 @@ def postfix_transform(expression):
             stack.append(expression[i])
 
         elif expression[i] == '(':
+            if expression[i+1] in operators:
+                raise Exception('invalid operator placement')
             stack.append(expression[i])
 
         elif expression[i] == ')':
+            if expression[i-1] in operators:
+                raise Exception('invalid operator placement')
             o = stack.pop()
             try:
                 while o != '(':
@@ -106,5 +108,5 @@ def postfix_transform(expression):
         postfix.append(o)
     
     if len(postfix) % 2 == 0:
-        raise Exception('Too many operators')
+        raise Exception('invalid number of operators')
     return postfix
