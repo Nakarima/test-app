@@ -2,6 +2,7 @@ import multiprocessing as mp
 
 def calc(expression):
     try:
+        print(postfix_transform(expression))
         res = expr_evaluation(postfix_transform(expression))
         return res
     except Exception as e:
@@ -96,8 +97,6 @@ def postfix_transform(expression):
                     o = stack.pop()
             except:
                 raise Exception('Unclosed parenthisis')
-            if len(stack) > 0 and stack[-1] in operators:
-                postfix.append(stack.pop())
         else:
             raise Exception('Character not allowed')
 
