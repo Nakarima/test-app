@@ -12,13 +12,6 @@ def postfix_evaluation(expression):
     if len(expression) == 1:
         return expression[0]
 
-    def is_digit(x):
-        try:
-            float(x)
-            return True
-        except ValueError:
-            return False
-
     stack = []
     operators = {'+': lambda x, y: x + y,
                  '-': lambda x, y: x - y,
@@ -69,13 +62,20 @@ def postfix_transform(expression):
     operators = '+-/*'
     prec = {'*': 3, '/':3, '+':2, '-':2, '(':1}
     expression.replace(' ', '')
+    is_negative = False
 
     for i in range(len(expression)):
         if expression[i].isdigit():
             if i > 0 and expression[i - 1].isdigit():
                 postfix[-1] = postfix[-1] + expression[i]
             else:
-                postfix.append(expression[i])
+                digit = expression[i]
+                if is_negative:
+                    is_negative = False
+                    digit = '-' + digit
+                postfix.append(digit)
+        elif is_negative:
+            print("negative")
 
         elif expression[i] in operators:
             while len(stack) > 0 and prec[expression[i]] <= prec[stack[-1]]:
@@ -83,9 +83,11 @@ def postfix_transform(expression):
             stack.append(expression[i])
 
         elif expression[i] == '(':
-            if expression[i+1] in operators:
+            if expression[i+1] in '+*/':
                 raise Exception('invalid operator placement')
             stack.append(expression[i])
+            if expression[i+1] == '-':
+                is_negative = True
 
         elif expression[i] == ')':
             if expression[i-1] in operators:
@@ -105,7 +107,15 @@ def postfix_transform(expression):
         if o == "(":
             raise Exception('Unclosed parenthisis')
         postfix.append(o)
-    
+
     if len(postfix) % 2 == 0:
         raise Exception('invalid number of operators')
     return postfix
+
+def is_digit(x):
+    try:
+        float(x)
+        return True
+    except ValueError:
+        return False
+
