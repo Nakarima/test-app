@@ -2,7 +2,6 @@ import multiprocessing as mp
 
 def calc(expression):
     try:
-        print(postfix_transform(expression))
         res = expr_evaluation(postfix_transform(expression))
         return res
     except Exception as e:
@@ -23,8 +22,13 @@ def postfix_evaluation(expression):
         else:
             s2 = float(stack.pop())
             s1 = float(stack.pop())
+            print(s1, s2)
+            print(s1 - s2)
             stack.append(float(operators[symbol](s1,s2)))
-    return str(stack[0])
+    result = round(stack[0], 4)
+    if result.is_integer():
+        return int(result)
+    return result
 
 def expr_evaluation(expression):
     if len(expression) < 7:
@@ -66,7 +70,7 @@ def postfix_transform(expression):
 
     for i in range(len(expression)):
         if expression[i].isdigit():
-            if i > 0 and expression[i - 1].isdigit():
+            if i > 0 and (expression[i - 1].isdigit() or expression[i-1] == '.'):
                 postfix[-1] = postfix[-1] + expression[i]
             else:
                 digit = expression[i]
@@ -74,8 +78,12 @@ def postfix_transform(expression):
                     is_negative = False
                     digit = '-' + digit
                 postfix.append(digit)
+
+        elif expression[i] == '.':
+            postfix[-1] = postfix[-1] + '.'
+
         elif is_negative:
-            print("negative")
+            pass
 
         elif expression[i] in operators:
             while len(stack) > 0 and prec[expression[i]] <= prec[stack[-1]]:
