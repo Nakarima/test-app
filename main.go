@@ -140,10 +140,6 @@ func postfixTransform(expression string) ([]string, error) {
 					return nil, errors.New("unclosed parenthisis")
 				}
 			}
-			if len(stack) > 0 && strings.ContainsAny(stack[len(stack)-1], operators) {
-				postfix = append(postfix, stack[len(stack)-1])
-				stack = stack[:len(stack)-1]
-			}
 
 		} else {
 			return nil, errors.New("char not allowed")
