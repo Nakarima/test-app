@@ -22,8 +22,6 @@ def postfix_evaluation(expression):
         else:
             s2 = float(stack.pop())
             s1 = float(stack.pop())
-            print(s1, s2)
-            print(s1 - s2)
             stack.append(float(operators[symbol](s1,s2)))
     result = round(stack[0], 4)
     if result.is_integer():
@@ -100,8 +98,8 @@ def postfix_transform(expression):
         elif expression[i] == ')':
             if expression[i-1] in operators:
                 raise Exception('invalid operator placement')
-            o = stack.pop()
             try:
+                o = stack.pop()
                 while o != '(':
                     postfix.append(o)
                     o = stack.pop()
