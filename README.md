@@ -1,6 +1,6 @@
 # test-app
 
-##Basic expression calculator written in Python (and second version in Go)
+## Basic expression calculator written in Python (and second version in Go)
 
 Server needs Flask framework to run.
 Start server using ``FLASK_APP=main.py flask run``.
