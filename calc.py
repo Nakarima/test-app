@@ -1,5 +1,7 @@
 import multiprocessing as mp
 
+operators = '+-/*'
+
 def calc(expression):
     try:
         res = expr_evaluation(postfix_transform(expression))
@@ -38,7 +40,7 @@ def expr_evaluation(expression):
     index = len(expression) - 1
 
     while operators_count != operands_count:
-        if expression[index] in '*-/+':
+        if expression[index] in operators:
             operators_count += 1
         else:
             operands_count += 1
@@ -47,7 +49,6 @@ def expr_evaluation(expression):
     tmp1 = expression[:index + 1]
     tmp2 = expression[index + 1:]
     pool = mp.Pool(2)
-    #find way for recurrent processes
     expr1 = pool.apply_async(postfix_evaluation, [tmp1])
     expr2 = pool.apply_async(postfix_evaluation, [tmp2])
 
@@ -61,14 +62,16 @@ def expr_evaluation(expression):
 def postfix_transform(expression):
     postfix = []
     stack = []
-    operators = '+-/*'
+    dot = '.'
+    left_par = '('
+    right_par = ')'
     prec = {'*': 3, '/':3, '+':2, '-':2, '(':1}
     expression.replace(' ', '')
     is_negative = False
 
     for i in range(len(expression)):
         if expression[i].isdigit():
-            if i > 0 and (expression[i - 1].isdigit() or expression[i-1] == '.'):
+            if i > 0 and (expression[i - 1].isdigit() or expression[i-1] == dot):
                 postfix[-1] = postfix[-1] + expression[i]
             else:
                 digit = expression[i]
@@ -77,8 +80,10 @@ def postfix_transform(expression):
                     digit = '-' + digit
                 postfix.append(digit)
 
-        elif expression[i] == '.':
-            postfix[-1] = postfix[-1] + '.'
+        elif expression[i] == dot:
+            if not expression[i-1].isdigit() or not expression[i+1].isdigit():
+                raise Exception("bad dot placement")
+            postfix[-1] = postfix[-1] + dot
 
         elif is_negative:
             pass
@@ -88,19 +93,19 @@ def postfix_transform(expression):
                 postfix.append(stack.pop())
             stack.append(expression[i])
 
-        elif expression[i] == '(':
+        elif expression[i] == left_par:
             if expression[i+1] in '+*/':
                 raise Exception('invalid operator placement')
-            stack.append(expression[i])
             if expression[i+1] == '-':
                 is_negative = True
+            stack.append(expression[i])
 
-        elif expression[i] == ')':
+        elif expression[i] == right_par:
             if expression[i-1] in operators:
                 raise Exception('invalid operator placement')
             try:
                 o = stack.pop()
-                while o != '(':
+                while o != left_par:
                     postfix.append(o)
                     o = stack.pop()
             except:
@@ -110,7 +115,7 @@ def postfix_transform(expression):
 
     while len(stack) > 0:
         o = stack.pop()
-        if o == "(":
+        if o == left_par:
             raise Exception('Unclosed parenthisis')
         postfix.append(o)
 

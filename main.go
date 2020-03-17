@@ -96,6 +96,9 @@ func postfixTransform(expression string) ([]string, error) {
 	postfix := []string{}
 	stack := []string{}
 	operators := "+-/*"
+	dot := "."
+	leftPar := "("
+	rightPar := ")"
 	prec := map[string]int{
 		"*": 3,
 		"/": 3,
@@ -103,34 +106,46 @@ func postfixTransform(expression string) ([]string, error) {
 		"-": 2,
 		"(": 1,
 	}
+	isDigit := func(char byte) bool {
+		return unicode.IsDigit(rune(char))
+	}
 
 	expression = strings.ReplaceAll(expression, " ", "")
-	//dirty, strings conv everywhere xD
-	for i, s := range expression {
-		if unicode.IsDigit(s) {
-			if i > 0 && unicode.IsDigit(rune(expression[i-1])) {
-				postfix[len(postfix)-1] = postfix[len(postfix)-1] + string(s)
+	for i, char := range expression {
+		s := string(char)
+
+		if unicode.IsDigit(char) {
+			if i > 0 && (isDigit(expression[i-1]) || string(expression[i-1]) == dot) {
+				postfix[len(postfix)-1] = postfix[len(postfix)-1] + s
 			} else {
-				postfix = append(postfix, string(s))
+				postfix = append(postfix, s)
 			}
-		} else if strings.ContainsAny(string(s), operators) {
-			for len(stack) > 0 && prec[string(s)] <= prec[stack[len(stack)-1]] {
+		} else if s == dot {
+			if i == 0 {
+				return nil, errors.New("bad dot placement")
+			}
+			if !isDigit(expression[i-1]) || !isDigit(expression[i+1]) {
+				return nil, errors.New("bad dot placement")
+			}
+			postfix[len(postfix)-1] = postfix[len(postfix)-1] + s
+		} else if strings.ContainsAny(s, operators) {
+			for len(stack) > 0 && prec[s] <= prec[stack[len(stack)-1]] {
 				postfix = append(postfix, stack[len(stack)-1])
 				stack = stack[:len(stack)-1]
 			}
-			stack = append(stack, string(s))
-		} else if strings.ContainsAny(string(s), "(") {
+			stack = append(stack, s)
+		} else if s == leftPar {
 			if strings.ContainsAny(string(expression[i+1]), operators) {
 				return nil, errors.New("invalid operator placement")
 			}
-			stack = append(stack, string(s))
-		} else if strings.ContainsAny(string(s), ")") {
+			stack = append(stack, s)
+		} else if s == rightPar {
 			if strings.ContainsAny(string(expression[i-1]), operators) {
 				return nil, errors.New("invalid operator placement")
 			}
 			o := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
-			for !strings.ContainsAny(string(o), "(") {
+			for o != leftPar {
 				postfix = append(postfix, o)
 				if len(stack) > 0 {
 					o = stack[len(stack)-1]
@@ -151,7 +166,7 @@ func postfixTransform(expression string) ([]string, error) {
 		postfix = append(postfix, stack[len(stack)-1])
 		stack = stack[:len(stack)-1]
 	}
-
+	log.Print(postfix)
 	if len(postfix)%2 == 0 {
 		return nil, errors.New("invalid number of operators")
 	}
