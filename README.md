@@ -9,4 +9,4 @@ Negative numbers must be wrapped in parenthisis, e.g. (-1).
 It transforms infix notation to postfix, then splits expression to smaller expressions and then evaluates them.
 
 
-Go version only shows how it could use multiprocessing (in function expressionEvaluation) to count every smaller expressions, because I couldn't make it in Python. It may show wrong answers, because not all bugs are fixed. It definetely needs rewriting.
+Go version shows how it could use multiprocessing (in function expressionEvaluation) to count every smaller expressions, because I couldn't make it in Python.
