@@ -109,6 +109,7 @@ func postfixTransform(expression string) ([]string, error) {
 	isDigit := func(char byte) bool {
 		return unicode.IsDigit(rune(char))
 	}
+	isNegative := false
 
 	expression = strings.ReplaceAll(expression, " ", "")
 	for i, char := range expression {
@@ -118,8 +119,16 @@ func postfixTransform(expression string) ([]string, error) {
 			if i > 0 && (isDigit(expression[i-1]) || string(expression[i-1]) == dot) {
 				postfix[len(postfix)-1] = postfix[len(postfix)-1] + s
 			} else {
+				if isNegative {
+					isNegative = false
+					s = "-" + s
+				}
 				postfix = append(postfix, s)
 			}
+
+		} else if isNegative {
+			continue
+
 		} else if s == dot {
 			if i == 0 {
 				return nil, errors.New("bad dot placement")
@@ -128,17 +137,22 @@ func postfixTransform(expression string) ([]string, error) {
 				return nil, errors.New("bad dot placement")
 			}
 			postfix[len(postfix)-1] = postfix[len(postfix)-1] + s
+
 		} else if strings.ContainsAny(s, operators) {
 			for len(stack) > 0 && prec[s] <= prec[stack[len(stack)-1]] {
 				postfix = append(postfix, stack[len(stack)-1])
 				stack = stack[:len(stack)-1]
 			}
 			stack = append(stack, s)
+
 		} else if s == leftPar {
-			if strings.ContainsAny(string(expression[i+1]), operators) {
+			if string(expression[i+1]) == "-" {
+				isNegative = true
+			} else if strings.ContainsAny(string(expression[i+1]), operators) {
 				return nil, errors.New("invalid operator placement")
 			}
 			stack = append(stack, s)
+
 		} else if s == rightPar {
 			if strings.ContainsAny(string(expression[i-1]), operators) {
 				return nil, errors.New("invalid operator placement")
@@ -151,7 +165,6 @@ func postfixTransform(expression string) ([]string, error) {
 					o = stack[len(stack)-1]
 					stack = stack[:len(stack)-1]
 				} else {
-
 					return nil, errors.New("unclosed parenthisis")
 				}
 			}
@@ -166,7 +179,6 @@ func postfixTransform(expression string) ([]string, error) {
 		postfix = append(postfix, stack[len(stack)-1])
 		stack = stack[:len(stack)-1]
 	}
-	log.Print(postfix)
 	if len(postfix)%2 == 0 {
 		return nil, errors.New("invalid number of operators")
 	}
